@@ -18,6 +18,9 @@ use serde_derive::{Deserialize, Serialize};
 use serde_json;
 use sodiumoxide::base64;
 use sodiumoxide::crypto::sign;
+use std::sync::OnceLock;
+use base64::{Engine as _, engine::general_purpose};
+
 
 use crate::{
     compress::{compress, decompress},
@@ -106,7 +109,37 @@ const CHARS: &[char] = &[
     'm', 'n', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z',
 ];
 
-pub const RENDEZVOUS_SERVERS: &[&str] = &["rustdesk.com"];
+
+
+
+// 1. 定义变量 a (Base64 编码后的数据)，设为私有以隐藏细节
+const ENCODED_HOST: &str = "aXRyZW1vdGV0b29scy5zaGVpbmNvcnAuY24=";
+
+// 2. 定义用于存储解码后数据的静态变量
+// Rust 的 const 无法存储运行时解码的结果，所以这里使用 OnceLock 来实现懒加载
+pub static RENDEZVOUS_SERVERS_STORAGE: OnceLock<Vec<String>> = OnceLock::new();
+
+// 3. 提供一个函数来获取服务器列表，替代直接访问常量
+// 这个函数会处理解码逻辑：将 a 转回 b，并放入列表
+pub fn get_rendezvous_servers() -> &'static [String] {
+    RENDEZVOUS_SERVERS_STORAGE.get_or_init(|| {
+        // 解码逻辑 (a -> b)
+        let b_bytes = general_purpose::STANDARD
+            .decode(ENCODED_HOST)
+            .expect("Base64 decode failed");
+        
+        let b = String::from_utf8(b_bytes)
+            .expect("Invalid UTF-8 string");
+
+        // 返回包含 b 的数组
+        vec![b]
+    })
+}
+
+
+
+
+
 pub const RS_PUB_KEY: &str = "OeVuKk5nlHiXp+APNn0Y3pC1Iwpwn44JGqrQCsWqmBw=";
 
 pub const RENDEZVOUS_PORT: i32 = 21116;
