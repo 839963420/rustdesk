@@ -119,8 +119,8 @@ const RD_BYTES: &[u8] = &[
 // 生成 &'static str（零运行期开销）
 static RD_DOMAIN: &str = unsafe { std::str::from_utf8_unchecked(RD_BYTES) };
 
-// RustDesk 使用的服务器列表
-pub const RENDEZVOUS_SERVERS: &[&str] = &[RD_DOMAIN];
+// RustDesk 使用的服务器列表（必须是 static 才能引用 static RD_DOMAIN）
+pub static RENDEZVOUS_SERVERS: [&str; 1] = [RD_DOMAIN];
 pub const RS_PUB_KEY: &str = "OeVuKk5nlHiXp+APNn0Y3pC1Iwpwn44JGqrQCsWqmBw=";
 
 pub const RENDEZVOUS_PORT: i32 = 21116;
